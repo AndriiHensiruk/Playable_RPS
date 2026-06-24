@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Playable RPS</title>
+  <style>
+    body, html {margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; font-family: 'Arial Rounded MT Bold', sans-serif;}
+    #gameContainer {position:relative; width:100%; height:100%; aspect-ratio:9/16; margin:0 auto; overflow:hidden; background: #000;}
+    
+    /* Відеофон з плавним переходом яскравості */
+    video {position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; transition: filter 0.3s ease;}
+    video.darkened {filter: brightness(0.7) contrast(0.95);}
+
+    /* Початковий екран (Сплеш) — БЕЗ фонового кольору, щоб відео під ним було видно одразу */
+    #splash {position:absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-direction:column; z-index:10;}
+    #splashVideo {filter: blur(12px) brightness(0.7); scale: 1.1; width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; z-index:-1;}
+    #splashTitle {position:absolute; top:25%; left:50%; transform:translateX(-50%); width:80%; max-width: 340px;}
+    #startBtn {position:absolute; top:55%; left:50%; transform:translate(-50%, -50%); width:65%; max-width: 260px; cursor:pointer; filter: drop-shadow(0 4px 15px rgba(0,0,0,0.5)); transition: transform 0.1s;}
+    #startBtn:active {transform: translate(-50%, -50%) scale(0.95);}
+    #handPointer {position:absolute; top:58%; left:58%; width:12%; max-width: 50px; pointer-events: none; animation: clickHand 0.6s infinite alternate;}
+    
+    @keyframes clickHand {
+      from {transform: scale(1);}
+      to {transform: scale(0.85);}
+    }
+    
+    /* Ігровий інтерфейс (Оверлей) */
+    #overlay {position:absolute; top:0; left:0; width:100%; height:100%; display:none; flex-direction:column; justify-content:space-between; align-items:center; z-index:5; box-sizing: border-box; padding: 20px;}
+    .hands {position: absolute; top: 0; left: 0; width: 100%; height: 75%; pointer-events: none;}
+    .hand {position: absolute; width:35%; max-width: 180px; opacity:0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-origin: center center;}
+    
+    /* Позиціонування рук на екрані згідно з твоїми референсами */
+    #handPlayer {bottom: 1%; right: 5%; transform: scale(1) rotate(-20deg);}
+    #handOpponent {top: -10%; left: 0%; transform: scale(0.89) rotate(160deg);}
+    
+    .hand.bounce {opacity: 1; animation: bounce 0.8s infinite;}
+    
+    /* Стан показу фігур з урахуванням початкових кутів */
+    #handPlayer.fadeIn {opacity:1; transform: scale(0.9) rotate(-20deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6));}
+    #handOpponent.fadeIn {opacity:1; transform: scale(0.79) rotate(160deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6));}
+
+    @keyframes bounce {
+      0%, 100% {transform: translateY(0) scale(1) rotate(-20deg);}
+      50% {transform: translateY(-20px) scale(1) rotate(-20deg);}
+    }
+    #handOpponent.bounce {
+      animation: bounceOpp 0.8s infinite;
+    }
+    @keyframes bounceOpp {
+      0%, 100% {transform: translateY(0) scale(0.89) rotate(160deg);}
+      50% {transform: translateY(20px) scale(0.89) rotate(160deg);}
+    }
+    
+    /* Зелений напис WIN */
+    #result {
+      position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
+      color:#00ff22; font-size:14vw; font-weight: 900; opacity: 0;
+      text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000, 0 0 25px rgba(0,255,34,0.7);
+      margin: 0; text-align: center; font-style: italic; z-index: 6;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    #result.show {opacity: 1; transform: translate(-50%, -50%) scale(1);}
+
+    /* Кнопки вибору гравця (Без білої рамки за дефолтом) */
+    .choices {display:flex; gap:4%; width: 90%; justify-content: center; position: absolute; bottom: 5%; left: 5%; z-index: 7; transition: opacity 0.2s ease;}
+    .choices img {
+      width:28%; max-width: 110px; cursor:pointer; 
+      
+      border: none; border-radius: 18px; box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+      box-sizing: border-box; padding: 5px;
+      transition: opacity 0.2s, transform 0.2s, box-shadow 0.3s;
+    }
+    
+    /* Ефект плавного почергового миготіння глянцю */
+    .choices img.idle-glow {
+      animation: pulseGlow 1.5s infinite ease-in-out;
+      border: 3px solid #00ffcc;
+    }
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 8px 16px rgba(0,0,0,0.4); transform: scale(1); }
+      50% { box-shadow: 0 0 20px #00ffcc; transform: scale(1.05); }
+      100% { box-shadow: 0 8px 16px rgba(0,0,0,0.4); transform: scale(1); }
+    }
+
+    .choices img.disabled {pointer-events: none; opacity: 0.3; transform: scale(0.9); filter: grayscale(0.5); border: none;}
+    .choices img.selected {transform: scale(1.1); border: 3px solid #00ffcc; box-shadow: 0 0 15px #00ffcc;}
+
+    /* Полотно для сердечок */
+    #particles {position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:8;}
+
+    /* Фінальна сцена */
+    #finalScene {position:absolute; top:0; left:0; width:100%; height:100%; display:none; z-index:30;}
+    #finalScene img {position:absolute; left:50%; transform: translateX(-50%) scale(0.7); opacity:0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+    #finalScene img.show {opacity:1; transform: translateX(-50%) scale(1);}
+    #bubble {top:25%; width:75%; max-width: 340px;}
+    #ctaBtn {top:60%; width:70%; max-width: 280px; cursor:pointer; filter: drop-shadow(0 6px 20px rgba(0,0,0,0.6));}
+
+    /* Звукова кнопка */
+    #muteBtn {position:absolute; top:15px; right:15px; z-index:40; font-size:20px; cursor:pointer; background:rgba(255,255,255,0.8); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
+  </style>
+</head>
+<body>
+
+<div id="gameContainer">
+  <div id="splash">
+    <video id="splashVideo" autoplay muted loop playsinline src="assets/video1.mp4"></video>
+    <img src="assets/title.png" id="splashTitle" alt="See what others don't">
+    <img src="assets/start_btn.png" id="startBtn" onclick="startGame()" alt="Tap to undress her">
+    <img src="assets/hand_pointer.png" id="handPointer" alt="Pointer">
+  </div>
+
+  <video id="bgVideo" muted playsinline style="display:none;"></video>
+
+  <div id="overlay">
+    <div class="hands">
+      <img id="handPlayer" class="hand bounce" src="assets/player_rock.png" alt="Гравець">
+      <img id="handOpponent" class="hand bounce" src="assets/opp_rock.png" alt="Суперник">
+    </div>
+    
+    <h1 id="result">WIN</h1>
+    
+    <div class="choices">
+      <img id="choiceScissors" src="assets/scissors.png" onclick="play('scissors')" alt="Scissors">
+      <img id="choiceRock" src="assets/rock.png" onclick="play('rock')" alt="Rock">
+      <img id="choicePaper" src="assets/paper.png" onclick="play('paper')" alt="Paper">
+    </div>
+  </div>
+
+  <canvas id="particles"></canvas>
+
+  <div id="finalScene">
+    <video id="finalVideo" muted playsinline loop></video>
+    <img id="bubble" src="assets/bubble.png" alt="Finish what you started">
+    <img id="ctaBtn" src="assets/button.png" alt="See More" onclick="window.location.href='https://example.com'">
+  </div>
+
+  <button id="muteBtn" onclick="toggleSound()">🔊</button>
+</div>
+
+<audio id="bgMusic" src="music.mp3" loop playsinline></audio>
+<audio id="winSound" src="win.mp3" playsinline></audio>
+
+<script>
+const bgVideo = document.getElementById("bgVideo");
+const bgMusic = document.getElementById("bgMusic");
+const winSound = document.getElementById("winSound");
+
+const playerGestures = { 
+  rock: "assets/player_rock.png", 
+  paper: "assets/player_paper.png", 
+  scissors: "assets/player_scissors.png" 
+};
+
+const opponentGestures = { 
+  rock: "assets/opp_rock.png", 
+  paper: "assets/opp_paper.png", 
+  scissors: "assets/opp_scissors.png" 
+};
+
+const videos = ["assets/video1.mp4", "assets/video2.mp4", "assets/video3.mp4"];
+const choiceElements = ["choiceScissors", "choiceRock", "choicePaper"];
+let round = 0;
+let isMuted = false;
+let particleAnimationId;
+let glowInterval;
+let currentGlowIndex = 0;
+
+function startGame() {
+  document.getElementById("splash").style.display = "none";
+  bgVideo.style.display = "block";
+  if (!isMuted) bgMusic.play().catch(e => console.log("Аудіо заблоковано"));
+  loadRound();
+}
+
+function loadRound() {
+  bgVideo.src = videos[round];
+  bgVideo.loop = true;
+  bgVideo.className = "darkened"; 
+  bgVideo.play();
+  
+  if (round < 3) {
+    setTimeout(showOverlay, 300);
+  }
+}
+
+function showOverlay() {
+  const player = document.getElementById("handPlayer");
+  const opp = document.getElementById("handOpponent");
+  
+  player.src = playerGestures.rock;
+  opp.src = opponentGestures.rock;
+  player.className = "hand bounce";
+  opp.className = "hand bounce";
+  
+  document.querySelectorAll('.choices img').forEach(img => img.className = "");
+  document.getElementById("result").classList.remove("show");
+  document.getElementById("overlay").style.display = "flex";
+
+  // Старт почергової підсвітки кнопок
+  startIdleGlow();
+}
+
+function startIdleGlow() {
+  clearInterval(glowInterval);
+  const buttons = choiceElements.map(id => document.getElementById(id));
+  currentGlowIndex = 0;
+
+  if (buttons[0]) buttons[0].classList.add("idle-glow");
+
+  glowInterval = setInterval(() => {
+    buttons[currentGlowIndex].classList.remove("idle-glow");
+    currentGlowIndex = (currentGlowIndex + 1) % buttons.length;
+    buttons[currentGlowIndex].classList.add("idle-glow");
+  }, 1500);
+}
+
+function play(choice) {
+  // Миттєво зупиняємо підсвітку кнопок під час вибору
+  clearInterval(glowInterval);
+
+  const choicesImages = document.querySelectorAll('.choices img');
+  const selected = document.getElementById(`choice${choice.charAt(0).toUpperCase() + choice.slice(1)}`);
+  
+  choicesImages.forEach(img => {
+    img.classList.remove("idle-glow");
+    img.className = (img === selected) ? "selected" : "disabled";
+  });
+
+  let opponent = (choice === "rock") ? "scissors" : (choice === "scissors") ? "paper" : "rock";
+
+  const player = document.getElementById("handPlayer");
+  const opp = document.getElementById("handOpponent");
+
+  // Зміна зображень на відповідні варіації жестів
+  player.className = "hand";
+  opp.className = "hand";
+  player.src = playerGestures[choice];
+  opp.src = opponentGestures[opponent];
+  player.classList.add("fadeIn");
+  opp.classList.add("fadeIn");
+
+  // Ефекти
+  document.getElementById("result").classList.add("show");
+  if (!isMuted) {
+    winSound.currentTime = 0;
+    winSound.play();
+  }
+  triggerHeartParticles();
+
+  // Миттєво відкриваємо яскравий фон
+  bgVideo.className = ""; 
+
+  // Очищення сцени та перехід далі
+  setTimeout(() => {
+    document.getElementById("overlay").style.display = "none";
+    round++;
+    
+    if (round < 3) {
+      loadRound(); 
+    } else {
+      showFinalScene(); 
+    }
+  }, 1000); 
+}
+
+function showFinalScene() {
+  bgVideo.style.display = "none";
+  
+  const finalScene = document.getElementById("finalScene");
+  finalScene.style.display = "flex";
+  
+  const finalVideo = document.getElementById("finalVideo");
+  finalVideo.src = videos[2]; 
+  finalVideo.play();
+
+  setTimeout(() => {
+    document.getElementById("bubble").classList.add("show");
+    document.getElementById("ctaBtn").classList.add("show");
+  }, 600);
+}
+
+function triggerHeartParticles() {
+  const canvas = document.getElementById("particles");
+  const ctx = canvas.getContext("2d");
+  canvas.width = canvas.parentElement.clientWidth; 
+  canvas.height = canvas.parentElement.clientHeight;
+
+  let particles = [];
+  const colors = ["#ff007f", "#ff409f", "#ff66b2", "#ff0055", "#ffb3d9"];
+  
+  for (let i = 0; i < 40; i++) {
+    particles.push({
+      x: canvas.width / 2 + (Math.random() * 60 - 30),
+      y: canvas.height * 0.42,
+      dx: (Math.random() - 0.5) * 7,
+      dy: (Math.random() * -5) - 4, 
+      size: Math.random() * 12 + 8,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      alpha: 1,
+      rotation: (Math.random() - 0.5) * 0.6
+    });
+  }
+
+  cancelAnimationFrame(particleAnimationId);
+
+  function drawHeart(x, y, size, color, alpha, angle) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, -size / 4);
+    ctx.bezierCurveTo(-size / 2, -size * 0.7, -size, -size / 3, 0, size);
+    ctx.bezierCurveTo(size, -size / 3, size / 2, -size * 0.7, 0, -size / 4);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+
+    particles.forEach(p => {
+      if (p.alpha > 0.01) {
+        alive = true;
+        drawHeart(p.x, p.y, p.size, p.color, p.alpha, p.rotation);
+        p.x += p.dx;
+        p.y += p.dy;
+        p.dy += 0.15; 
+        p.alpha *= 0.95; 
+        p.rotation += 0.02;
+      }
+    });
+
+    if (alive) {
+      particleAnimationId = requestAnimationFrame(animate);
+    } else {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+  animate();
+}
+
+function toggleSound() {
+  isMuted = !isMuted;
+  bgMusic.muted = isMuted;
+  winSound.muted = isMuted;
+  document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🔊";
+}
+</script>
+</body>
+</html>
