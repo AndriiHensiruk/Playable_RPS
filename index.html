@@ -5,14 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Playable RPS</title>
   <style>
-    body, html {margin:0; padding:0; width:100%; height:100%; background:#000; overflow:hidden; font-family: 'Arial Rounded MT Bold', sans-serif;}
-    #gameContainer {position:relative; width:100%; height:100%; aspect-ratio:9/16; margin:0 auto; overflow:hidden; background: #000;}
+    body, html {
+      margin: 0; 
+      padding: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: #111; /* Темне тло навколо ігрового вікна на десктопі */
+      overflow: hidden; 
+      font-family: 'Arial Rounded MT Bold', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    #gameContainer {
+      position: relative; 
+      height: 100%; 
+      aspect-ratio: 9/16; 
+      max-width: 100%;
+      max-height: 100vh;
+      overflow: hidden; 
+      background: #000;
+      box-shadow: 0 0 30px rgba(0,0,0,0.8); /* Тінь для виділення вікна на ПК */
+    }
     
     /* Відеофон з плавним переходом яскравості */
     video {position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; transition: filter 0.3s ease;}
     video.darkened {filter: brightness(0.7) contrast(0.95);}
 
-    /* Початковий екран (Сплеш) — БЕЗ фонового кольору, щоб відео під ним було видно одразу */
+    /* Початковий екран (Сплеш) */
     #splash {position:absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-direction:column; z-index:10;}
     #splashVideo {filter: blur(12px) brightness(0.7); scale: 1.1; width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; z-index:-1;}
     #splashTitle {position:absolute; top:25%; left:50%; transform:translateX(-50%); width:80%; max-width: 340px;}
@@ -30,7 +51,7 @@
     .hands {position: absolute; top: 0; left: 0; width: 100%; height: 75%; pointer-events: none;}
     .hand {position: absolute; width:35%; max-width: 180px; opacity:0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-origin: center center;}
     
-    /* Позиціонування рук на екрані згідно з твоїми референсами */
+    /* Позиціонування рук на екрані */
     #handPlayer {bottom: 1%; right: 5%; transform: scale(1) rotate(-20deg);}
     #handOpponent {top: -10%; left: 0%; transform: scale(0.89) rotate(160deg);}
     
@@ -62,11 +83,10 @@
     }
     #result.show {opacity: 1; transform: translate(-50%, -50%) scale(1);}
 
-    /* Кнопки вибору гравця (Без білої рамки за дефолтом) */
+    /* Кнопки вибору гравця */
     .choices {display:flex; gap:4%; width: 90%; justify-content: center; position: absolute; bottom: 5%; left: 5%; z-index: 7; transition: opacity 0.2s ease;}
     .choices img {
       width:28%; max-width: 110px; cursor:pointer; 
-      
       border: none; border-radius: 18px; box-shadow: 0 8px 16px rgba(0,0,0,0.4);
       box-sizing: border-box; padding: 5px;
       transition: opacity 0.2s, transform 0.2s, box-shadow 0.3s;
@@ -197,7 +217,6 @@ function showOverlay() {
   document.getElementById("result").classList.remove("show");
   document.getElementById("overlay").style.display = "flex";
 
-  // Старт почергової підсвітки кнопок
   startIdleGlow();
 }
 
@@ -216,7 +235,6 @@ function startIdleGlow() {
 }
 
 function play(choice) {
-  // Миттєво зупиняємо підсвітку кнопок під час вибору
   clearInterval(glowInterval);
 
   const choicesImages = document.querySelectorAll('.choices img');
@@ -232,7 +250,6 @@ function play(choice) {
   const player = document.getElementById("handPlayer");
   const opp = document.getElementById("handOpponent");
 
-  // Зміна зображень на відповідні варіації жестів
   player.className = "hand";
   opp.className = "hand";
   player.src = playerGestures[choice];
@@ -240,7 +257,6 @@ function play(choice) {
   player.classList.add("fadeIn");
   opp.classList.add("fadeIn");
 
-  // Ефекти
   document.getElementById("result").classList.add("show");
   if (!isMuted) {
     winSound.currentTime = 0;
@@ -248,10 +264,8 @@ function play(choice) {
   }
   triggerHeartParticles();
 
-  // Миттєво відкриваємо яскравий фон
   bgVideo.className = ""; 
 
-  // Очищення сцени та перехід далі
   setTimeout(() => {
     document.getElementById("overlay").style.display = "none";
     round++;
