@@ -152,9 +152,9 @@
 <div id="gameContainer">
   <div id="splash">
     <video id="splashVideo" muted loop playsinline preload="auto" src="assets/video1.webm"></video>
-    <img src="assets/title.png" id="splashTitle" alt="See what others don't">
-    <img src="assets/start_btn.png" id="startBtn" onclick="startGame()" alt="Tap to undress her">
-    <img src="assets/hand_pointer.png" id="handPointer" alt="Pointer">
+    <img src="assets/title.webp" id="splashTitle" alt="See what others don't">
+    <img src="assets/start_btn.webp" id="startBtn" onclick="startGame()" alt="Tap to undress her">
+    <img src="assets/hand_pointer.webp" id="handPointer" alt="Pointer">
   </div>
 
   <video id="bgVideo" muted playsinline style="display:none;"></video>
@@ -163,16 +163,16 @@
 
   <div id="overlay">
     <div class="hands">
-      <img id="handPlayer" class="hand" src="assets/player_rock.png" alt="Гравець">
-      <img id="handOpponent" class="hand" src="assets/opp_rock.png" alt="Суперник">
+      <img id="handPlayer" class="hand" src="assets/player_rock.webp" alt="Гравець">
+      <img id="handOpponent" class="hand" src="assets/opp_rock.webp" alt="Суперник">
     </div>
     
     <h1 id="result">WIN</h1>
     
     <div class="choices">
-      <img id="choicePaper" src="assets/paper.png" onclick="play('paper')" alt="Paper">
-      <img id="choiceRock" src="assets/rock.png" onclick="play('rock')" alt="Rock">
-      <img id="choiceScissors" src="assets/scissors.png" onclick="play('scissors')" alt="Scissors">
+      <img id="choicePaper" src="assets/paper.webp" onclick="play('paper')" alt="Paper">
+      <img id="choiceRock" src="assets/rock.webp" onclick="play('rock')" alt="Rock">
+      <img id="choiceScissors" src="assets/scissors.webp" onclick="play('scissors')" alt="Scissors">
     </div>
   </div>
 
@@ -180,8 +180,8 @@
 
   <div id="finalScene">
     <video id="finalVideo" muted playsinline loop></video>
-    <img id="bubble" src="assets/bubble.png" alt="Finish what you started">
-    <img id="ctaBtn" src="assets/button.png" alt="See More" onclick="window.location.href='https://honeytoon.com/video-comic/ripe-peach?n=1'">
+    <img id="bubble" src="assets/bubble.webp" alt="Finish what you started">
+    <img id="ctaBtn" src="assets/button.webp" alt="See More" onclick="window.location.href='https://honeytoon.com/video-comic/ripe-peach?n=1'">
   </div>
 
   <button id="muteBtn" onclick="toggleSound()">🔊</button>
@@ -197,15 +197,15 @@ const bgMusic = document.getElementById("bgMusic");
 const winSound = document.getElementById("winSound");
 
 const playerGestures = { 
-  rock: "assets/player_rock.png", 
-  paper: "assets/player_paper.png", 
-  scissors: "assets/player_scissors.png" 
+  rock: "assets/player_rock.webp", 
+  paper: "assets/player_paper.webp", 
+  scissors: "assets/player_scissors.webp" 
 };
 
 const opponentGestures = { 
-  rock: "assets/opp_rock.png", 
-  paper: "assets/opp_paper.png", 
-  scissors: "assets/opp_scissors.png" 
+  rock: "assets/opp_rock.webp", 
+  paper: "assets/opp_paper.webp", 
+  scissors: "assets/opp_scissors.webp" 
 };
 
 const choiceElements = ["choicePaper", "choiceRock", "choiceScissors"];
