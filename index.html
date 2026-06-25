@@ -247,33 +247,29 @@ function startGame() {
   bgVideo.style.display = "block";
   if (!isMuted) bgMusic.play().catch(e => console.log("Аудіо заблоковано"));
   
-  // Одразу запускаємо перший раунд
   bgMusic.volume = 0.05;
   bgVideo.src = gamePlaylist[0];
   bgVideo.loop = true;
   bgVideo.play();
-  preloadNextVideo(1); // Починаємо фонове завантаження раунду 2
+  preloadNextVideo(1); 
   
   setTimeout(() => { showOverlay(); }, 500);
 }
 
-// Функція фонового підвантаження
 function preloadNextVideo(nextRoundIndex) {
   if (nextRoundIndex < gamePlaylist.length) {
     nextVideoCache.src = gamePlaylist[nextRoundIndex];
-    nextVideoCache.load(); // Мобільні примусово починають завантажувати шматок файлу
+    nextVideoCache.load();
   }
 }
 
 function loadRound() {
-  // Замість мережевого запиту ми просто беремо вже прогрітий src з кеш-плеєра
   bgVideo.src = gamePlaylist[round];
   bgVideo.loop = true; 
   bgVideo.className = ""; 
   bgMusic.volume = 0.05;
   bgVideo.play();
   
-  // Поки грається поточний раунд, заздалегідь вантажимо наступний (для round=1 завантажиться фінальне відео)
   preloadNextVideo(round + 1);
 
   if (round < 2) {
