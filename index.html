@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uk">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +10,7 @@
       padding: 0; 
       width: 100%; 
       height: 100%; 
-      background: #111; /* Темне тло навколо ігрового вікна на десктопі */
+      background: #111; 
       overflow: hidden; 
       font-family: 'Arial Rounded MT Bold', sans-serif;
       display: flex;
@@ -25,57 +25,67 @@
       max-width: 100%;
       max-height: 100vh;
       overflow: hidden; 
-      background: #000;
-      box-shadow: 0 0 30px rgba(0,0,0,0.8); /* Тінь для виділення вікна на ПК */
+      background: #000 url('assets/video_bg.png') center center / cover no-repeat;
+      box-shadow: 0 0 30px rgba(0,0,0,0.8); 
     }
     
-    /* Відеофон з плавним переходом яскравості */
     video {position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; transition: filter 0.3s ease;}
     video.darkened {filter: brightness(0.7) contrast(0.95);}
 
-    /* Початковий екран (Сплеш) */
+    /* Початковий екран */
     #splash {position:absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-direction:column; z-index:10;}
-    #splashVideo {filter: blur(12px) brightness(0.7); scale: 1.1; width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; z-index:-1;}
+    #splashVideo {filter: blur(5px) brightness(0.7); scale: 1.45; width:100%; height:100%; object-fit:cover; position:absolute; top:20%; left:0; z-index:-1;}
     #splashTitle {position:absolute; top:25%; left:50%; transform:translateX(-50%); width:80%; max-width: 340px;}
     #startBtn {position:absolute; top:55%; left:50%; transform:translate(-50%, -50%); width:65%; max-width: 260px; cursor:pointer; filter: drop-shadow(0 4px 15px rgba(0,0,0,0.5)); transition: transform 0.1s;}
     #startBtn:active {transform: translate(-50%, -50%) scale(0.95);}
-    #handPointer {position:absolute; top:58%; left:58%; width:12%; max-width: 50px; pointer-events: none; animation: clickHand 0.6s infinite alternate;}
+    #handPointer {position:absolute; top:58%; left:58%; width:32%; max-width: 50%; pointer-events: none; animation: clickHand 0.6s infinite alternate;}
     
     @keyframes clickHand {
       from {transform: scale(1);}
       to {transform: scale(0.85);}
     }
     
-    /* Ігровий інтерфейс (Оверлей) */
-    #overlay {position:absolute; top:0; left:0; width:100%; height:100%; display:none; flex-direction:column; justify-content:space-between; align-items:center; z-index:5; box-sizing: border-box; padding: 20px;}
-    .hands {position: absolute; top: 0; left: 0; width: 100%; height: 75%; pointer-events: none;}
-    .hand {position: absolute; width:35%; max-width: 180px; opacity:0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-origin: center center;}
-    
-    /* Позиціонування рук на екрані */
-    #handPlayer {bottom: 1%; right: 5%; transform: scale(1) rotate(-20deg);}
-    #handOpponent {top: -10%; left: 0%; transform: scale(0.89) rotate(160deg);}
-    
-    .hand.bounce {opacity: 1; animation: bounce 0.8s infinite;}
-    
-    /* Стан показу фігур з урахуванням початкових кутів */
-    #handPlayer.fadeIn {opacity:1; transform: scale(0.9) rotate(-20deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6));}
-    #handOpponent.fadeIn {opacity:1; transform: scale(0.79) rotate(160deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6));}
+    /* Ігровий інтерфейс */
+    #overlay {
+      position:absolute; top:0; left:0; width:100%; height:100%; 
+      display:none; flex-direction:column; justify-content:space-between; align-items:center; 
+      z-index:5; box-sizing: border-box; padding: 20px;
+      opacity: 0; transition: opacity 0.5s ease;
+    }
+    #overlay.active { display: flex; opacity: 1; }
 
-    @keyframes bounce {
-      0%, 100% {transform: translateY(0) scale(1) rotate(-20deg);}
-      50% {transform: translateY(-20px) scale(1) rotate(-20deg);}
-    }
-    #handOpponent.bounce {
-      animation: bounceOpp 0.8s infinite;
-    }
-    @keyframes bounceOpp {
-      0%, 100% {transform: translateY(0) scale(0.89) rotate(160deg);}
-      50% {transform: translateY(20px) scale(0.89) rotate(160deg);}
-    }
+    .hands {position: absolute; top: 0; left: 0; width: 100%; height: 75%; pointer-events: none;}
+    .hand {position: absolute; width:35%; max-width: 180px; opacity:0; transform-origin: center center;}
     
-    /* Зелений напис WIN */
+    #handPlayer {bottom: 1%; right: 5%; transform: scale(0.9) rotate(-20deg);}
+    #handOpponent {top: -10%; left: 0%; transform: scale(0.8) rotate(160deg);}
+    
+    /* Ритмічні замахи кулаками */
+    .hand.shakePlayer {
+      opacity: 1;
+      animation: shakeP 0.5s ease-in-out 3;
+    }
+    .hand.shakeOpponent {
+      opacity: 1;
+      animation: shakeOpp 0.5s ease-in-out 3;
+    }
+
+    @keyframes shakeP {
+      0%, 100% { transform: scale(0.9) rotate(-20deg) translateY(0); }
+      50% { transform: scale(0.95) rotate(-10deg) translateY(-40px); }
+    }
+    @keyframes shakeOpp {
+      0%, 100% { transform: scale(0.8) rotate(160deg) translateY(0); }
+      50% { transform: scale(0.85) rotate(150deg) translateY(40px); }
+    }
+
+    /* Викид фінального жесту */
+    #handPlayer.fadeIn { opacity:1; transform: scale(1) rotate(-20deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
+    #handOpponent.fadeIn { opacity:1; transform: scale(0.89) rotate(160deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
+    
+    /* Напис WIN */
     #result {
-      position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.5);
+      position: absolute; top: 40%; left: 44%; transform: translate(-50%, -50%) scale(0.5);
       color:#00ff22; font-size:14vw; font-weight: 900; opacity: 0;
       text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000, 0 0 25px rgba(0,255,34,0.7);
       margin: 0; text-align: center; font-style: italic; z-index: 6;
@@ -83,7 +93,7 @@
     }
     #result.show {opacity: 1; transform: translate(-50%, -50%) scale(1);}
 
-    /* Кнопки вибору гравця */
+    /* Кнопки вибору */
     .choices {display:flex; gap:4%; width: 90%; justify-content: center; position: absolute; bottom: 5%; left: 5%; z-index: 7; transition: opacity 0.2s ease;}
     .choices img {
       width:28%; max-width: 110px; cursor:pointer; 
@@ -92,7 +102,6 @@
       transition: opacity 0.2s, transform 0.2s, box-shadow 0.3s;
     }
     
-    /* Ефект плавного почергового миготіння глянцю */
     .choices img.idle-glow {
       animation: pulseGlow 1.5s infinite ease-in-out;
       border: 3px solid #00ffcc;
@@ -106,17 +115,15 @@
     .choices img.disabled {pointer-events: none; opacity: 0.3; transform: scale(0.9); filter: grayscale(0.5); border: none;}
     .choices img.selected {transform: scale(1.1); border: 3px solid #00ffcc; box-shadow: 0 0 15px #00ffcc;}
 
-    /* Полотно для сердечок */
     #particles {position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:8;}
 
     /* Фінальна сцена */
     #finalScene {position:absolute; top:0; left:0; width:100%; height:100%; display:none; z-index:30;}
     #finalScene img {position:absolute; left:50%; transform: translateX(-50%) scale(0.7); opacity:0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
     #finalScene img.show {opacity:1; transform: translateX(-50%) scale(1);}
-    #bubble {top:25%; width:75%; max-width: 340px;}
+    #bubble {top:25%; left: auto !important; right:0.5%; width:45%; max-width: 240px;}
     #ctaBtn {top:60%; width:70%; max-width: 280px; cursor:pointer; filter: drop-shadow(0 6px 20px rgba(0,0,0,0.6));}
 
-    /* Звукова кнопка */
     #muteBtn {position:absolute; top:15px; right:15px; z-index:40; font-size:20px; cursor:pointer; background:rgba(255,255,255,0.8); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
   </style>
 </head>
@@ -124,7 +131,7 @@
 
 <div id="gameContainer">
   <div id="splash">
-    <video id="splashVideo" autoplay muted loop playsinline src="assets/video1.mp4"></video>
+    <video id="splashVideo" muted loop playsinline preload="auto" src="assets/video1.webm"></video>
     <img src="assets/title.png" id="splashTitle" alt="See what others don't">
     <img src="assets/start_btn.png" id="startBtn" onclick="startGame()" alt="Tap to undress her">
     <img src="assets/hand_pointer.png" id="handPointer" alt="Pointer">
@@ -134,8 +141,8 @@
 
   <div id="overlay">
     <div class="hands">
-      <img id="handPlayer" class="hand bounce" src="assets/player_rock.png" alt="Гравець">
-      <img id="handOpponent" class="hand bounce" src="assets/opp_rock.png" alt="Суперник">
+      <img id="handPlayer" class="hand" src="assets/player_rock.png" alt="Гравець">
+      <img id="handOpponent" class="hand" src="assets/opp_rock.png" alt="Суперник">
     </div>
     
     <h1 id="result">WIN</h1>
@@ -178,7 +185,8 @@ const opponentGestures = {
   scissors: "assets/opp_scissors.png" 
 };
 
-const videos = ["assets/video1.mp4", "assets/video2.mp4", "assets/video3.mp4"];
+/* ВСЬОГО 4 ВІДЕО В ГРІ (Раунди 0, 1, 2. А індекс 3 — фінал) */
+const videos = ["assets/video1.webm", "assets/video2.webm", "assets/video3.webm", "assets/video4.webm"];
 const choiceElements = ["choiceScissors", "choiceRock", "choicePaper"];
 let round = 0;
 let isMuted = false;
@@ -196,26 +204,32 @@ function startGame() {
 function loadRound() {
   bgVideo.src = videos[round];
   bgVideo.loop = true;
-  bgVideo.className = "darkened"; 
+  bgVideo.className = ""; 
   bgVideo.play();
   
+  // Якщо це звичайний ігровий раунд (0, 1 або 2)
   if (round < 3) {
-    setTimeout(showOverlay, 300);
+    setTimeout(() => {
+      bgVideo.pause();
+      bgVideo.className = "darkened";
+      showOverlay();
+    }, 3000);
   }
 }
 
 function showOverlay() {
+  const overlay = document.getElementById("overlay");
   const player = document.getElementById("handPlayer");
   const opp = document.getElementById("handOpponent");
   
-  player.src = playerGestures.rock;
-  opp.src = opponentGestures.rock;
-  player.className = "hand bounce";
-  opp.className = "hand bounce";
+  player.className = "hand";
+  opp.className = "hand";
   
   document.querySelectorAll('.choices img').forEach(img => img.className = "");
   document.getElementById("result").classList.remove("show");
-  document.getElementById("overlay").style.display = "flex";
+  
+  overlay.style.display = "flex";
+  setTimeout(() => overlay.classList.add("active"), 10);
 
   startIdleGlow();
 }
@@ -245,37 +259,51 @@ function play(choice) {
     img.className = (img === selected) ? "selected" : "disabled";
   });
 
+  bgVideo.play();
+
   let opponent = (choice === "rock") ? "scissors" : (choice === "scissors") ? "paper" : "rock";
 
   const player = document.getElementById("handPlayer");
   const opp = document.getElementById("handOpponent");
 
-  player.className = "hand";
-  opp.className = "hand";
-  player.src = playerGestures[choice];
-  opp.src = opponentGestures[opponent];
-  player.classList.add("fadeIn");
-  opp.classList.add("fadeIn");
+  // Ставимо початкові кулаки для замаху
+  player.src = playerGestures.rock;
+  opp.src = opponentGestures.rock;
+  
+  player.className = "hand shakePlayer";
+  opp.className = "hand shakeOpponent";
 
-  document.getElementById("result").classList.add("show");
-  if (!isMuted) {
-    winSound.currentTime = 0;
-    winSound.play();
-  }
-  triggerHeartParticles();
-
-  bgVideo.className = ""; 
-
+  // Через 1.5 секунди замахів показуємо фінальні жести
   setTimeout(() => {
-    document.getElementById("overlay").style.display = "none";
+    player.className = "hand fadeIn";
+    opp.className = "hand fadeIn";
+    player.src = playerGestures[choice];
+    opp.src = opponentGestures[opponent];
+
+    setTimeout(() => {
+      document.getElementById("result").classList.add("show");
+      if (!isMuted) {
+        winSound.currentTime = 0;
+        winSound.play();
+      }
+      triggerHeartParticles();
+    }, 150);
+
+  }, 1500);
+
+  // Перемикання раунду після закінчення всієї боївки
+  setTimeout(() => {
+    const overlay = document.getElementById("overlay");
+    overlay.classList.remove("active");
+    overlay.style.display = "none";
     round++;
     
     if (round < 3) {
       loadRound(); 
     } else {
-      showFinalScene(); 
+      showFinalScene(); // Якщо round став рівним 3, запускаємо 4-те відео як фінальне
     }
-  }, 1000); 
+  }, 3200); 
 }
 
 function showFinalScene() {
@@ -285,9 +313,10 @@ function showFinalScene() {
   finalScene.style.display = "flex";
   
   const finalVideo = document.getElementById("finalVideo");
-  finalVideo.src = videos[2]; 
+  finalVideo.src = videos[3]; // Завантажуємо 4-те відео (індекс 3)
   finalVideo.play();
 
+  // Показуємо бабл та кнопку переходу через 0.6 секунди
   setTimeout(() => {
     document.getElementById("bubble").classList.add("show");
     document.getElementById("ctaBtn").classList.add("show");
