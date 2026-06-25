@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -30,11 +30,7 @@
     }
     
     video {position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; transition: filter 0.3s ease;}
-    
-    /* Перший рівень затемнення (коли відео закінчилось) */
     video.paused-dark {filter: brightness(0.7) contrast(0.95);}
-    
-    /* Посилене затемнення під час гри руками */
     video.playing-dark {filter: brightness(0.3) contrast(0.95);}
 
     /* Початковий екран */
@@ -50,7 +46,7 @@
     }
     
     #handPointer {
-      position:absolute; top:56%; left:56%; width:22%; max-width: 50%; 
+      position:absolute; top:56%; left:56%; width:32%; max-width: 50%; 
       pointer-events: none; z-index: 11;
       animation: clickHandPhysics 2s infinite ease-in-out;
     }
@@ -76,11 +72,11 @@
     }
     #overlay.active { display: flex; opacity: 1; }
 
-    .hands {position: absolute; top: 0; left: 0; width: 100%; height: 85%; pointer-events: none;}
-    .hand {position: absolute; width:65%; max-width: 180px; opacity:0; transform-origin: center center;}
+    .hands {position: absolute; top: 0; left: 0; width: 100%; height: 75%; pointer-events: none;}
+    .hand {position: absolute; width:35%; max-width: 180px; opacity:0; transform-origin: center center;}
     
-    #handPlayer {bottom: 1%; right: 5%; transform: scale(1) rotate(-20deg);}
-    #handOpponent {top: -10%; left: 0%; transform: scale(0.9) rotate(160deg);}
+    #handPlayer {bottom: 1%; right: 5%; transform: scale(1.2) rotate(-20deg);}
+    #handOpponent {top: -10%; left: 0%; transform: scale(1) rotate(160deg);}
     
     .hand.shakePlayer {
       opacity: 1;
@@ -92,19 +88,19 @@
     }
 
     @keyframes shakeP {
-      0%, 100% { transform: scale(0.9) rotate(-20deg) translateY(0); }
-      50% { transform: scale(0.95) rotate(-10deg) translateY(-40px); }
+      0%, 100% { transform: scale(1) rotate(-20deg) translateY(0); }
+      50% { transform: scale(1.1) rotate(-10deg) translateY(-40px); }
     }
     @keyframes shakeOpp {
-      0%, 100% { transform: scale(0.8) rotate(160deg) translateY(0); }
-      50% { transform: scale(0.85) rotate(150deg) translateY(40px); }
+      0%, 100% { transform: scale(1) rotate(160deg) translateY(0); }
+      50% { transform: scale(1.1) rotate(150deg) translateY(40px); }
     }
 
-    #handPlayer.fadeIn { opacity:1; transform: scale(1) rotate(-20deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
-    #handOpponent.fadeIn { opacity:1; transform: scale(0.89) rotate(160deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
+    #handPlayer.fadeIn { opacity:1; transform: scale(1.5) rotate(-20deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
+    #handOpponent.fadeIn { opacity:1; transform: scale(1.1) rotate(160deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
     
     #result {
-      position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0.1);
+      position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.1);
       color:#00ff22; font-size:14vw; font-weight: 900; opacity: 0;
       text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000, 0 0 25px rgba(0,255,34,0.7);
       margin: 0; text-align: center; font-style: italic; z-index: 6;
@@ -122,10 +118,7 @@
       transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s;
     }
     
-    .choices img.scale-in {
-      opacity: 1;
-      transform: scale(1);
-    }
+    .choices img.scale-in { opacity: 1; transform: scale(1); }
 
     .choices img.idle-glow {
       animation: pulseShadowOnly 1.5s infinite ease-in-out;
@@ -147,15 +140,8 @@
     #finalScene img {position:absolute; opacity:0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
     #finalScene img.show {opacity:1; transform: scale(1);}
     
-    #bubble {
-      top:25%; width:75%; max-width: 240px;
-      left: auto !important; right: 5%;
-      transform: scale(0.7);
-    }
-    #ctaBtn {
-      top:60%; left: 10%; transform: translateX(-50%) scale(0.7); width:100%; max-width: 380px; 
-      cursor:pointer; filter: drop-shadow(0 6px 20px rgba(0,0,0,0.6));
-    }
+    #bubble { top:25%; width:75%; max-width: 240px; left: auto !important; right: 5%; transform: scale(0.7); }
+    #ctaBtn { top:60%; left: 10%; transform: translateX(-50%) scale(0.7); width:100%; max-width: 380px; cursor:pointer; filter: drop-shadow(0 6px 20px rgba(0,0,0,0.6)); }
     #ctaBtn.show { transform: translateX(50%) scale(1.5); }
 
     #muteBtn {position:absolute; top:15px; right:15px; z-index:40; font-size:20px; cursor:pointer; background:rgba(255,255,255,0.8); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
@@ -172,6 +158,8 @@
   </div>
 
   <video id="bgVideo" muted playsinline style="display:none;"></video>
+  
+  <video id="nextVideoCache" muted playsinline preload="auto" style="display:none; width:1px; height:1px; opacity:0.01; pointer-events:none;"></video>
 
   <div id="overlay">
     <div class="hands">
@@ -182,9 +170,9 @@
     <h1 id="result">WIN</h1>
     
     <div class="choices">
-      <img id="choiceScissors" src="assets/scissors.png" onclick="play('scissors')" alt="Scissors">
-      <img id="choiceRock" src="assets/rock.png" onclick="play('rock')" alt="Rock">
       <img id="choicePaper" src="assets/paper.png" onclick="play('paper')" alt="Paper">
+      <img id="choiceRock" src="assets/rock.png" onclick="play('rock')" alt="Rock">
+      <img id="choiceScissors" src="assets/scissors.png" onclick="play('scissors')" alt="Scissors">
     </div>
   </div>
 
@@ -204,6 +192,7 @@
 
 <script>
 const bgVideo = document.getElementById("bgVideo");
+const nextVideoCache = document.getElementById("nextVideoCache"); // Кеш-відео плеєр
 const bgMusic = document.getElementById("bgMusic");
 const winSound = document.getElementById("winSound");
 
@@ -219,7 +208,7 @@ const opponentGestures = {
   scissors: "assets/opp_scissors.png" 
 };
 
-const choiceElements = ["choiceScissors", "choiceRock", "choicePaper"];
+const choiceElements = ["choicePaper", "choiceRock", "choiceScissors"];
 let gamePlaylist = []; 
 let secondVideoType = ""; 
 let round = 0;
@@ -257,16 +246,36 @@ function startGame() {
   document.getElementById("splash").style.display = "none";
   bgVideo.style.display = "block";
   if (!isMuted) bgMusic.play().catch(e => console.log("Аудіо заблоковано"));
-  loadRound();
+  
+  // Одразу запускаємо перший раунд
+  bgMusic.volume = 0.05;
+  bgVideo.src = gamePlaylist[0];
+  bgVideo.loop = true;
+  bgVideo.play();
+  preloadNextVideo(1); // Починаємо фонове завантаження раунду 2
+  
+  setTimeout(() => { showOverlay(); }, 500);
+}
+
+// Функція фонового підвантаження
+function preloadNextVideo(nextRoundIndex) {
+  if (nextRoundIndex < gamePlaylist.length) {
+    nextVideoCache.src = gamePlaylist[nextRoundIndex];
+    nextVideoCache.load(); // Мобільні примусово починають завантажувати шматок файлу
+  }
 }
 
 function loadRound() {
+  // Замість мережевого запиту ми просто беремо вже прогрітий src з кеш-плеєра
   bgVideo.src = gamePlaylist[round];
   bgVideo.loop = true; 
   bgVideo.className = ""; 
   bgMusic.volume = 0.05;
   bgVideo.play();
   
+  // Поки грається поточний раунд, заздалегідь вантажимо наступний (для round=1 завантажиться фінальне відео)
+  preloadNextVideo(round + 1);
+
   if (round < 2) {
     setTimeout(() => {
       showOverlay();
@@ -330,7 +339,15 @@ function play(choice) {
   bgVideo.pause();
   bgVideo.className = "playing-dark";
 
-  let opponent = (choice === "rock") ? "scissors" : (choice === "scissors") ? "paper" : "rock";
+  let opponent = "";
+  if (choice === "paper") {
+    opponent = "rock"; 
+  } else if (choice === "scissors") {
+    opponent = "paper"; 
+  } else if (choice === "rock") {
+    opponent = "scissors"; 
+  }
+
   const player = document.getElementById("handPlayer");
   const opp = document.getElementById("handOpponent");
 
@@ -343,6 +360,7 @@ function play(choice) {
   setTimeout(() => {
     player.className = "hand fadeIn";
     opp.className = "hand fadeIn";
+    
     player.src = playerGestures[choice];
     opp.src = opponentGestures[opponent];
 
@@ -352,7 +370,7 @@ function play(choice) {
         winSound.currentTime = 0;
         winSound.play();
       }
-    }, 150);
+    }, 600); 
 
   }, 1500);
 
@@ -374,10 +392,8 @@ function play(choice) {
       }
     }
     
-    // Запускаємо частинки
     triggerHeartParticles(targetYFactor);
 
-    // НОВЕ: Зміна відео відбувається ОДРАЗУ під час програвання партіклів
     setTimeout(() => {
       round++;
       if (round < 2) {
