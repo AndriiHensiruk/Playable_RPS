@@ -34,12 +34,12 @@
     /* Перший рівень затемнення (коли відео закінчилось) */
     video.paused-dark {filter: brightness(0.7) contrast(0.95);}
     
-    /* Другий рівень затемнення (ще сильніше під час гри руками) */
-    video.playing-dark {filter: brightness(0.45) contrast(0.95);}
+    /* Посилене затемнення під час гри руками */
+    video.playing-dark {filter: brightness(0.3) contrast(0.95);}
 
     /* Початковий екран */
     #splash {position:absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-direction:column; z-index:10;}
-    #splashVideo {filter: blur(12px) brightness(0.7); scale: 1.5; width:100%; height:100%; object-fit:cover; position:absolute; top:20%; left:0; z-index:-1;}
+    #splashVideo {filter: blur(4px) brightness(0.7); scale: 1.5; width:100%; height:100%; object-fit:cover; position:absolute; top:20%; left:0; z-index:-1;}
     #splashTitle {position:absolute; top:25%; left:50%; transform:translateX(-50%); width:80%; max-width: 340px;}
     
     #startBtn {
@@ -59,7 +59,6 @@
       0%, 100% { transform: translate(0, 0) scale(1); }
       40% { transform: translate(-20px, -15px) scale(1.1); }
       55% { transform: translate(4px, 12px) scale(0.85); }
-     
     }
 
     @keyframes btnPulseConnection {
@@ -77,11 +76,11 @@
     }
     #overlay.active { display: flex; opacity: 1; }
 
-    .hands {position: absolute; top: 0; left: 0; width: 100%; height: 75%; pointer-events: none;}
-    .hand {position: absolute; width:35%; max-width: 180px; opacity:0; transform-origin: center center;}
+    .hands {position: absolute; top: 0; left: 0; width: 100%; height: 85%; pointer-events: none;}
+    .hand {position: absolute; width:65%; max-width: 180px; opacity:0; transform-origin: center center;}
     
-    #handPlayer {bottom: 1%; right: 5%; transform: scale(0.9) rotate(-20deg);}
-    #handOpponent {top: -10%; left: 0%; transform: scale(0.8) rotate(160deg);}
+    #handPlayer {bottom: 1%; right: 5%; transform: scale(1) rotate(-20deg);}
+    #handOpponent {top: -10%; left: 0%; transform: scale(0.9) rotate(160deg);}
     
     .hand.shakePlayer {
       opacity: 1;
@@ -105,13 +104,13 @@
     #handOpponent.fadeIn { opacity:1; transform: scale(0.89) rotate(160deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
     
     #result {
-      position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.1);
+      position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%) scale(0.1);
       color:#00ff22; font-size:14vw; font-weight: 900; opacity: 0;
       text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000, 0 0 25px rgba(0,255,34,0.7);
       margin: 0; text-align: center; font-style: italic; z-index: 6;
       transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    #result.show {opacity: 1; transform: translate(-50%, -50%) scale(0.4);}
+    #result.show {opacity: 1; transform: translate(-50%, -50%) scale(1);}
 
     /* Кнопки вибору */
     .choices {display:flex; gap:4%; width: 90%; justify-content: center; position: absolute; bottom: 5%; left: 5%; z-index: 7;}
@@ -222,20 +221,19 @@ const opponentGestures = {
 
 const choiceElements = ["choiceScissors", "choiceRock", "choicePaper"];
 let gamePlaylist = []; 
+let secondVideoType = ""; 
 let round = 0;
 let isMuted = false;
 let particleAnimationId;
 let glowInterval;
 let currentGlowIndex = 0;
 
-// Налаштовуємо сповільнене відео на сплеші одразу при завантаженні сторінки
 window.addEventListener("DOMContentLoaded", () => {
   const splashVideo = document.getElementById("splashVideo");
-  splashVideo.playbackRate = 0.5; // Сповільнення у 2 рази
+  splashVideo.playbackRate = 0.5; 
   splashVideo.play().catch(e => console.log("Сплеш відео чекає взаємодії"));
 });
 
-// Відео дограло до кінця -> зупинка і перше затемнення
 bgVideo.addEventListener("ended", () => {
   if (round < 2) {
     bgVideo.className = "paused-dark"; 
@@ -243,7 +241,10 @@ bgVideo.addEventListener("ended", () => {
 });
 
 function preparePlaylist() {
-  const randomSecondVideo = Math.random() < 0.5 ? "assets/video2.webm" : "assets/video3.webm";
+  const isVideo2 = Math.random() < 0.5;
+  secondVideoType = isVideo2 ? "video2" : "video3";
+  
+  const randomSecondVideo = isVideo2 ? "assets/video2.webm" : "assets/video3.webm";
   gamePlaylist = [
     "assets/video1.webm",
     randomSecondVideo,
@@ -261,13 +262,12 @@ function startGame() {
 
 function loadRound() {
   bgVideo.src = gamePlaylist[round];
-  bgVideo.loop = false; 
+  bgVideo.loop = true; 
   bgVideo.className = ""; 
   bgMusic.volume = 0.05;
   bgVideo.play();
   
   if (round < 2) {
-    // ПОЯВА КНОПОК: З'являються майже одразу (через 500мс) після початку відео
     setTimeout(() => {
       showOverlay();
     }, 500);
@@ -327,10 +327,8 @@ function play(choice) {
     img.className = (img === selected) ? "selected" : "disabled";
   });
 
-  // Почалася гра: зациклюємо відео та робимо сильне затемнення
-  bgVideo.loop = true;
+  bgVideo.pause();
   bgVideo.className = "playing-dark";
-  bgVideo.play();
 
   let opponent = (choice === "rock") ? "scissors" : (choice === "scissors") ? "paper" : "rock";
   const player = document.getElementById("handPlayer");
@@ -354,7 +352,6 @@ function play(choice) {
         winSound.currentTime = 0;
         winSound.play();
       }
-      triggerHeartParticles();
     }, 150);
 
   }, 1500);
@@ -363,13 +360,33 @@ function play(choice) {
     const overlay = document.getElementById("overlay");
     overlay.classList.remove("active");
     overlay.style.display = "none";
-    round++;
     
-    if (round < 2) {
-      loadRound(); 
-    } else {
-      showFinalScene(); 
+    bgVideo.className = "";
+    bgVideo.loop = true;
+    bgVideo.play();
+    
+    let targetYFactor = 0.5; 
+    if (round === 1) {
+      if (secondVideoType === "video2") {
+        targetYFactor = 0.35; 
+      } else if (secondVideoType === "video3") {
+        targetYFactor = 0.65; 
+      }
     }
+    
+    // Запускаємо частинки
+    triggerHeartParticles(targetYFactor);
+
+    // НОВЕ: Зміна відео відбувається ОДРАЗУ під час програвання партіклів
+    setTimeout(() => {
+      round++;
+      if (round < 2) {
+        loadRound(); 
+      } else {
+        showFinalScene(); 
+      }
+    }, 150); 
+
   }, 3200); 
 }
 
@@ -389,7 +406,7 @@ function showFinalScene() {
   }, 600);
 }
 
-function triggerHeartParticles() {
+function triggerHeartParticles(yFactor) {
   const canvas = document.getElementById("particles");
   const ctx = canvas.getContext("2d");
   canvas.width = canvas.parentElement.clientWidth; 
@@ -401,13 +418,13 @@ function triggerHeartParticles() {
   for (let i = 0; i < 80; i++) {
     particles.push({
       x: canvas.width / 2 + (Math.random() * 120 - 60),
-      y: canvas.height * 0.42,
-      dx: (Math.random() - 0.5) * 7,
-      dy: (Math.random() * -5) - 4, 
+      y: canvas.height * yFactor, 
+      dx: (Math.random() - 0.5) * 12,
+      dy: (Math.random() * -7) - 6, 
       size: Math.random() * 20 + 16,
       color: colors[Math.floor(Math.random() * colors.length)],
       alpha: 1,
-      rotation: (Math.random() - 0.5) * 0.6
+      rotation: (Math.random() - 0.5) * 0.8
     });
   }
 
@@ -438,8 +455,8 @@ function triggerHeartParticles() {
         drawHeart(p.x, p.y, p.size, p.color, p.alpha, p.rotation);
         p.x += p.dx;
         p.y += p.dy;
-        p.dy += 0.15; 
-        p.alpha *= 0.95; 
+        p.dy += 0.18; 
+        p.alpha *= 0.96; 
         p.rotation += 0.02;
       }
     });
