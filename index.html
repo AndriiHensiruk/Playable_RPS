@@ -25,24 +25,47 @@
       max-width: 100%;
       max-height: 100vh;
       overflow: hidden; 
-      background: #000 url('assets/video_bg.png') center center / cover no-repeat;
+      background: #000 url('assets/video_bg.webp') center center / cover no-repeat;
       box-shadow: 0 0 30px rgba(0,0,0,0.8); 
     }
     
     video {position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; transition: filter 0.3s ease;}
-    video.darkened {filter: brightness(0.7) contrast(0.95);}
+    
+    /* Перший рівень затемнення (коли відео закінчилось) */
+    video.paused-dark {filter: brightness(0.7) contrast(0.95);}
+    
+    /* Другий рівень затемнення (ще сильніше під час гри руками) */
+    video.playing-dark {filter: brightness(0.45) contrast(0.95);}
 
     /* Початковий екран */
     #splash {position:absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-direction:column; z-index:10;}
-    #splashVideo {filter: blur(5px) brightness(0.7); scale: 1.45; width:100%; height:100%; object-fit:cover; position:absolute; top:20%; left:0; z-index:-1;}
+    #splashVideo {filter: blur(12px) brightness(0.7); scale: 1.5; width:100%; height:100%; object-fit:cover; position:absolute; top:20%; left:0; z-index:-1;}
     #splashTitle {position:absolute; top:25%; left:50%; transform:translateX(-50%); width:80%; max-width: 340px;}
-    #startBtn {position:absolute; top:55%; left:50%; transform:translate(-50%, -50%); width:65%; max-width: 260px; cursor:pointer; filter: drop-shadow(0 4px 15px rgba(0,0,0,0.5)); transition: transform 0.1s;}
-    #startBtn:active {transform: translate(-50%, -50%) scale(0.95);}
-    #handPointer {position:absolute; top:58%; left:58%; width:32%; max-width: 50%; pointer-events: none; animation: clickHand 0.6s infinite alternate;}
     
-    @keyframes clickHand {
-      from {transform: scale(1);}
-      to {transform: scale(0.85);}
+    #startBtn {
+      position:absolute; top:55%; left:50%; transform:translate(-50%, -50%); 
+      width:65%; max-width: 260px; cursor:pointer; 
+      filter: drop-shadow(0 4px 15px rgba(0,0,0,0.5));
+      animation: btnPulseConnection 2s infinite ease-in-out;
+    }
+    
+    #handPointer {
+      position:absolute; top:56%; left:56%; width:22%; max-width: 50%; 
+      pointer-events: none; z-index: 11;
+      animation: clickHandPhysics 2s infinite ease-in-out;
+    }
+    
+    @keyframes clickHandPhysics {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      40% { transform: translate(-20px, -15px) scale(1.1); }
+      55% { transform: translate(4px, 12px) scale(0.85); }
+     
+    }
+
+    @keyframes btnPulseConnection {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); }
+      55% { transform: translate(-50%, -50%) scale(0.94); }
+      70% { transform: translate(-50%, -50%) scale(1); }
     }
     
     /* Ігровий інтерфейс */
@@ -50,7 +73,7 @@
       position:absolute; top:0; left:0; width:100%; height:100%; 
       display:none; flex-direction:column; justify-content:space-between; align-items:center; 
       z-index:5; box-sizing: border-box; padding: 20px;
-      opacity: 0; transition: opacity 0.5s ease;
+      opacity: 0; transition: opacity 0.3s ease;
     }
     #overlay.active { display: flex; opacity: 1; }
 
@@ -60,7 +83,6 @@
     #handPlayer {bottom: 1%; right: 5%; transform: scale(0.9) rotate(-20deg);}
     #handOpponent {top: -10%; left: 0%; transform: scale(0.8) rotate(160deg);}
     
-    /* Ритмічні замахи кулаками */
     .hand.shakePlayer {
       opacity: 1;
       animation: shakeP 0.5s ease-in-out 3;
@@ -79,50 +101,64 @@
       50% { transform: scale(0.85) rotate(150deg) translateY(40px); }
     }
 
-    /* Викид фінального жесту */
     #handPlayer.fadeIn { opacity:1; transform: scale(1) rotate(-20deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
     #handOpponent.fadeIn { opacity:1; transform: scale(0.89) rotate(160deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
     
-    /* Напис WIN */
     #result {
-      position: absolute; top: 40%; left: 44%; transform: translate(-50%, -50%) scale(0.5);
+      position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.1);
       color:#00ff22; font-size:14vw; font-weight: 900; opacity: 0;
       text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000, 0 0 25px rgba(0,255,34,0.7);
       margin: 0; text-align: center; font-style: italic; z-index: 6;
       transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    #result.show {opacity: 1; transform: translate(-50%, -50%) scale(1);}
+    #result.show {opacity: 1; transform: translate(-50%, -50%) scale(0.4);}
 
     /* Кнопки вибору */
-    .choices {display:flex; gap:4%; width: 90%; justify-content: center; position: absolute; bottom: 5%; left: 5%; z-index: 7; transition: opacity 0.2s ease;}
+    .choices {display:flex; gap:4%; width: 90%; justify-content: center; position: absolute; bottom: 5%; left: 5%; z-index: 7;}
     .choices img {
       width:28%; max-width: 110px; cursor:pointer; 
       border: none; border-radius: 18px; box-shadow: 0 8px 16px rgba(0,0,0,0.4);
       box-sizing: border-box; padding: 5px;
-      transition: opacity 0.2s, transform 0.2s, box-shadow 0.3s;
+      opacity: 0; transform: scale(0);
+      transition: opacity 0.3s, transform 0.3s, box-shadow 0.3s;
     }
     
-    .choices img.idle-glow {
-      animation: pulseGlow 1.5s infinite ease-in-out;
-      border: 3px solid #00ffcc;
+    .choices img.scale-in {
+      opacity: 1;
+      transform: scale(1);
     }
-    @keyframes pulseGlow {
+
+    /* М'яка пульсація тіні без кольорової рамки */
+    .choices img.idle-glow {
+      animation: pulseShadowOnly 1.5s infinite ease-in-out;
+    }
+    @keyframes pulseShadowOnly {
       0% { box-shadow: 0 8px 16px rgba(0,0,0,0.4); transform: scale(1); }
-      50% { box-shadow: 0 0 20px #00ffcc; transform: scale(1.05); }
+      50% { box-shadow: 0 12px 24px rgba(255,255,255,0.4); transform: scale(1.05); }
       100% { box-shadow: 0 8px 16px rgba(0,0,0,0.4); transform: scale(1); }
     }
 
-    .choices img.disabled {pointer-events: none; opacity: 0.3; transform: scale(0.9); filter: grayscale(0.5); border: none;}
-    .choices img.selected {transform: scale(1.1); border: 3px solid #00ffcc; box-shadow: 0 0 15px #00ffcc;}
+    .choices img.disabled {pointer-events: none; opacity: 0.3; transform: scale(0.9); filter: grayscale(0.5);}
+    .choices img.selected {transform: scale(1.1); box-shadow: 0 0 25px rgba(0, 255, 34, 0.8); border: 3px solid #00ff22; opacity: 1;}
 
-    #particles {position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:8;}
+    #particles {position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index: 99 !important;}
 
     /* Фінальна сцена */
     #finalScene {position:absolute; top:0; left:0; width:100%; height:100%; display:none; z-index:30;}
-    #finalScene img {position:absolute; left:50%; transform: translateX(-50%) scale(0.7); opacity:0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
-    #finalScene img.show {opacity:1; transform: translateX(-50%) scale(1);}
-    #bubble {top:25%; left: auto !important; right:0.5%; width:45%; max-width: 240px;}
-    #ctaBtn {top:60%; width:70%; max-width: 280px; cursor:pointer; filter: drop-shadow(0 6px 20px rgba(0,0,0,0.6));}
+    #finalScene video {position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;}
+    #finalScene img {position:absolute; opacity:0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
+    #finalScene img.show {opacity:1; transform: scale(1);}
+    
+    #bubble {
+      top:25%; width:75%; max-width: 240px;
+      left: auto !important; right: 5%;
+      transform: scale(0.7);
+    }
+    #ctaBtn {
+      top:60%; left: 10%; transform: translateX(-50%) scale(0.7); width:100%; max-width: 380px; 
+      cursor:pointer; filter: drop-shadow(0 6px 20px rgba(0,0,0,0.6));
+    }
+    #ctaBtn.show { transform: translateX(50%) scale(1.5); }
 
     #muteBtn {position:absolute; top:15px; right:15px; z-index:40; font-size:20px; cursor:pointer; background:rgba(255,255,255,0.8); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
   </style>
@@ -159,7 +195,7 @@
   <div id="finalScene">
     <video id="finalVideo" muted playsinline loop></video>
     <img id="bubble" src="assets/bubble.png" alt="Finish what you started">
-    <img id="ctaBtn" src="assets/button.png" alt="See More" onclick="window.location.href='https://example.com'">
+    <img id="ctaBtn" src="assets/button.png" alt="See More" onclick="window.location.href='https://honeytoon.com/video-comic/ripe-peach?n=1'">
   </div>
 
   <button id="muteBtn" onclick="toggleSound()">🔊</button>
@@ -185,16 +221,39 @@ const opponentGestures = {
   scissors: "assets/opp_scissors.png" 
 };
 
-/* ВСЬОГО 4 ВІДЕО В ГРІ (Раунди 0, 1, 2. А індекс 3 — фінал) */
-const videos = ["assets/video1.webm", "assets/video2.webm", "assets/video3.webm", "assets/video4.webm"];
 const choiceElements = ["choiceScissors", "choiceRock", "choicePaper"];
+let gamePlaylist = []; 
 let round = 0;
 let isMuted = false;
 let particleAnimationId;
 let glowInterval;
 let currentGlowIndex = 0;
 
+// Налаштовуємо сповільнене відео на сплеші одразу при завантаженні сторінки
+window.addEventListener("DOMContentLoaded", () => {
+  const splashVideo = document.getElementById("splashVideo");
+  splashVideo.playbackRate = 0.5; // Сповільнення у 2 рази
+  splashVideo.play().catch(e => console.log("Сплеш відео чекає взаємодії"));
+});
+
+// Відео дограло до кінця -> зупинка і перше затемнення
+bgVideo.addEventListener("ended", () => {
+  if (round < 2) {
+    bgVideo.className = "paused-dark"; 
+  }
+});
+
+function preparePlaylist() {
+  const randomSecondVideo = Math.random() < 0.5 ? "assets/video2.webm" : "assets/video3.webm";
+  gamePlaylist = [
+    "assets/video1.webm",
+    randomSecondVideo,
+    "assets/video4.webm"
+  ];
+}
+
 function startGame() {
+  preparePlaylist();
   document.getElementById("splash").style.display = "none";
   bgVideo.style.display = "block";
   if (!isMuted) bgMusic.play().catch(e => console.log("Аудіо заблоковано"));
@@ -202,18 +261,16 @@ function startGame() {
 }
 
 function loadRound() {
-  bgVideo.src = videos[round];
-  bgVideo.loop = true;
+  bgVideo.src = gamePlaylist[round];
+  bgVideo.loop = false; 
   bgVideo.className = ""; 
   bgVideo.play();
   
-  // Якщо це звичайний ігровий раунд (0, 1 або 2)
-  if (round < 3) {
+  if (round < 2) {
+    // ПОЯВА КНОПОК: З'являються майже одразу (через 500мс) після початку відео
     setTimeout(() => {
-      bgVideo.pause();
-      bgVideo.className = "darkened";
       showOverlay();
-    }, 3000);
+    }, 500);
   }
 }
 
@@ -225,13 +282,25 @@ function showOverlay() {
   player.className = "hand";
   opp.className = "hand";
   
-  document.querySelectorAll('.choices img').forEach(img => img.className = "");
+  const buttons = choiceElements.map(id => document.getElementById(id));
+  buttons.forEach(img => img.className = ""); 
   document.getElementById("result").classList.remove("show");
   
   overlay.style.display = "flex";
   setTimeout(() => overlay.classList.add("active"), 10);
 
-  startIdleGlow();
+  // Скейл кнопок (почерговий або спільний)
+  if (round === 0) {
+    buttons.forEach((btn, index) => {
+      setTimeout(() => {
+        btn.classList.add("scale-in");
+        if (index === buttons.length - 1) setTimeout(startIdleGlow, 300);
+      }, index * 150);
+    });
+  } else {
+    buttons.forEach(btn => btn.classList.add("scale-in"));
+    setTimeout(startIdleGlow, 300);
+  }
 }
 
 function startIdleGlow() {
@@ -239,7 +308,7 @@ function startIdleGlow() {
   const buttons = choiceElements.map(id => document.getElementById(id));
   currentGlowIndex = 0;
 
-  if (buttons[0]) buttons[0].classList.add("idle-glow");
+  buttons[0].classList.add("idle-glow");
 
   glowInterval = setInterval(() => {
     buttons[currentGlowIndex].classList.remove("idle-glow");
@@ -250,7 +319,7 @@ function startIdleGlow() {
 
 function play(choice) {
   clearInterval(glowInterval);
-
+  
   const choicesImages = document.querySelectorAll('.choices img');
   const selected = document.getElementById(`choice${choice.charAt(0).toUpperCase() + choice.slice(1)}`);
   
@@ -259,21 +328,21 @@ function play(choice) {
     img.className = (img === selected) ? "selected" : "disabled";
   });
 
+  // Почалася гра: зациклюємо відео та робимо сильне затемнення
+  bgVideo.loop = true;
+  bgVideo.className = "playing-dark";
   bgVideo.play();
 
   let opponent = (choice === "rock") ? "scissors" : (choice === "scissors") ? "paper" : "rock";
-
   const player = document.getElementById("handPlayer");
   const opp = document.getElementById("handOpponent");
 
-  // Ставимо початкові кулаки для замаху
   player.src = playerGestures.rock;
   opp.src = opponentGestures.rock;
   
   player.className = "hand shakePlayer";
   opp.className = "hand shakeOpponent";
 
-  // Через 1.5 секунди замахів показуємо фінальні жести
   setTimeout(() => {
     player.className = "hand fadeIn";
     opp.className = "hand fadeIn";
@@ -291,17 +360,16 @@ function play(choice) {
 
   }, 1500);
 
-  // Перемикання раунду після закінчення всієї боївки
   setTimeout(() => {
     const overlay = document.getElementById("overlay");
     overlay.classList.remove("active");
     overlay.style.display = "none";
     round++;
     
-    if (round < 3) {
+    if (round < 2) {
       loadRound(); 
     } else {
-      showFinalScene(); // Якщо round став рівним 3, запускаємо 4-те відео як фінальне
+      showFinalScene(); 
     }
   }, 3200); 
 }
@@ -313,10 +381,9 @@ function showFinalScene() {
   finalScene.style.display = "flex";
   
   const finalVideo = document.getElementById("finalVideo");
-  finalVideo.src = videos[3]; // Завантажуємо 4-те відео (індекс 3)
+  finalVideo.src = gamePlaylist[2]; 
   finalVideo.play();
 
-  // Показуємо бабл та кнопку переходу через 0.6 секунди
   setTimeout(() => {
     document.getElementById("bubble").classList.add("show");
     document.getElementById("ctaBtn").classList.add("show");
@@ -332,13 +399,13 @@ function triggerHeartParticles() {
   let particles = [];
   const colors = ["#ff007f", "#ff409f", "#ff66b2", "#ff0055", "#ffb3d9"];
   
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 80; i++) {
     particles.push({
-      x: canvas.width / 2 + (Math.random() * 60 - 30),
+      x: canvas.width / 2 + (Math.random() * 120 - 60),
       y: canvas.height * 0.42,
       dx: (Math.random() - 0.5) * 7,
       dy: (Math.random() * -5) - 4, 
-      size: Math.random() * 12 + 8,
+      size: Math.random() * 20 + 16,
       color: colors[Math.floor(Math.random() * colors.length)],
       alpha: 1,
       rotation: (Math.random() - 0.5) * 0.6
