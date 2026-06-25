@@ -128,7 +128,6 @@
       transform: scale(1);
     }
 
-    /* М'яка пульсація тіні без кольорової рамки */
     .choices img.idle-glow {
       animation: pulseShadowOnly 1.5s infinite ease-in-out;
     }
@@ -201,8 +200,8 @@
   <button id="muteBtn" onclick="toggleSound()">🔊</button>
 </div>
 
-<audio id="bgMusic" src="music.mp3" loop playsinline></audio>
-<audio id="winSound" src="win.mp3" playsinline></audio>
+<audio id="bgMusic" src="assets/music.mp3" loop playsinline></audio>
+<audio id="winSound" src="assets/win.mp3" playsinline></audio>
 
 <script>
 const bgVideo = document.getElementById("bgVideo");
@@ -264,6 +263,7 @@ function loadRound() {
   bgVideo.src = gamePlaylist[round];
   bgVideo.loop = false; 
   bgVideo.className = ""; 
+  bgMusic.volume = 0.05;
   bgVideo.play();
   
   if (round < 2) {
@@ -289,7 +289,6 @@ function showOverlay() {
   overlay.style.display = "flex";
   setTimeout(() => overlay.classList.add("active"), 10);
 
-  // Скейл кнопок (почерговий або спільний)
   if (round === 0) {
     buttons.forEach((btn, index) => {
       setTimeout(() => {
