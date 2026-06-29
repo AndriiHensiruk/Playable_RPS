@@ -75,8 +75,8 @@
     .hands {position: absolute; top: 0; left: 0; width: 100%; height: 75%; pointer-events: none;}
     .hand {position: absolute; width:35%; max-width: 180px; opacity:0; transform-origin: center center;}
     
-    #handPlayer {bottom: 1%; right: 5%; transform: scale(1.1) rotate(-20deg);}
-    #handOpponent {top: -10%; left: 0%; transform: scale(1) rotate(160deg);}
+    #handPlayer {bottom: 1%; right: 5%; transform: scale(1) rotate(-20deg);}
+    #handOpponent {top: 1%; left: 5%; transform: scale(1) rotate(160deg);}
     
     .hand.shakePlayer {
       opacity: 1;
@@ -96,14 +96,14 @@
       50% { transform: scale(1.1) rotate(150deg) translateY(40px); }
     }
 
-    #handPlayer.fadeIn { opacity:1; transform: scale(1.5) rotate(-20deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
-    #handOpponent.fadeIn { opacity:1; transform: scale(1.1) rotate(160deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
+    #handPlayer.fadeIn { opacity:1; transform: scale(1) rotate(-20deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
+    #handOpponent.fadeIn { opacity:1; transform: scale(1) rotate(160deg); filter: drop-shadow(0 0 15px rgba(255,255,255,0.6)); transition: all 0.2s ease-out; }
     
     #result {
       position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.1);
-      color:#00ff22; font-size:14vw; font-weight: 900; opacity: 0;
-      text-shadow: -3px -3px 0 #000, 3px -3px 0 #000, -3px 3px 0 #000, 3px 3px 0 #000, 0 0 25px rgba(0,255,34,0.7);
-      margin: 0; text-align: center; font-style: italic; z-index: 6;
+      width: 40%; max-width: 280px; opacity: 0; z-index: 6;
+      /*filter: drop-shadow(0 0 20px rgba(0,255,34,0.6));*/
+      pointer-events: none;
       transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     #result.show {opacity: 1; transform: translate(-50%, -50%) scale(1);}
@@ -140,8 +140,8 @@
     #finalScene img {position:absolute; opacity:0; transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);}
     #finalScene img.show {opacity:1; transform: scale(1);}
     
-    #bubble { top:25%; width:75%; max-width: 240px; left: auto !important; right: 5%; transform: scale(0.7); }
-    #ctaBtn { top:60%; left: 10%; transform: translateX(-50%) scale(0.7); width:100%; max-width: 380px; cursor:pointer; filter: drop-shadow(0 6px 20px rgba(0,0,0,0.6)); }
+    #bubble { top:25%; width:50%; max-width: 240px; left: auto !important; right: 5%; transform: scale(0.7); }
+    #ctaBtn { top:60%; left: 6%; transform: translateX(-50%) scale(0.7); width:100%; max-width: 380px; cursor:pointer; filter: drop-shadow(0 6px 20px rgba(0,0,0,0.6)); }
     #ctaBtn.show { transform: translateX(50%) scale(1.5); }
 
     #muteBtn {position:absolute; top:15px; right:15px; z-index:40; font-size:20px; cursor:pointer; background:rgba(255,255,255,0.8); border:none; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; box-shadow: 0 2px 5px rgba(0,0,0,0.2);}
@@ -167,7 +167,7 @@
       <img id="handOpponent" class="hand" src="assets/opp_rock.webp" alt="Суперник">
     </div>
     
-    <h1 id="result">WIN</h1>
+    <img id="result" src="assets/win_text.png" alt="WIN">
     
     <div class="choices">
       <img id="choicePaper" src="assets/paper.webp" onclick="play('paper')" alt="Paper">
@@ -189,12 +189,16 @@
 
 <audio id="bgMusic" src="assets/music.mp3" loop playsinline></audio>
 <audio id="winSound" src="assets/win.mp3" playsinline></audio>
+<audio id="bubbleSound" src="assets/bubble.mp3" playsinline></audio>
+<audio id="startSound" src="assets/start_sound.mp3" playsinline></audio>
 
 <script>
 const bgVideo = document.getElementById("bgVideo");
-const nextVideoCache = document.getElementById("nextVideoCache"); // Кеш-відео плеєр
+const nextVideoCache = document.getElementById("nextVideoCache"); 
 const bgMusic = document.getElementById("bgMusic");
 const winSound = document.getElementById("winSound");
+const bubbleSound = document.getElementById("bubbleSound");
+const startSound = document.getElementById("startSound");
 
 const playerGestures = { 
   rock: "assets/player_rock.webp", 
@@ -245,7 +249,14 @@ function startGame() {
   preparePlaylist();
   document.getElementById("splash").style.display = "none";
   bgVideo.style.display = "block";
-  if (!isMuted) bgMusic.play().catch(e => console.log("Аудіо заблоковано"));
+  if (!isMuted) {
+    bgMusic.play().catch(e => console.log("Аудіо заблоковано"));
+    
+    if (startSound) {
+      startSound.currentTime = 0;
+      startSound.play().catch(e => console.log("Стартовий звук заблоковано"));
+    }
+  }
   
   bgMusic.volume = 0.05;
   bgVideo.src = gamePlaylist[0];
@@ -415,6 +426,10 @@ function showFinalScene() {
   setTimeout(() => {
     document.getElementById("bubble").classList.add("show");
     document.getElementById("ctaBtn").classList.add("show");
+    if (!isMuted && bubbleSound) {
+      bubbleSound.currentTime = 0;
+      bubbleSound.play().catch(e => console.log("Звук бабла заблоковано"));
+    }
   }, 600);
 }
 
@@ -486,6 +501,8 @@ function toggleSound() {
   isMuted = !isMuted;
   bgMusic.muted = isMuted;
   winSound.muted = isMuted;
+  if (bubbleSound) bubbleSound.muted = isMuted;
+  if (startSound) startSound.muted = isMuted;
   document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🔊";
 }
 </script>
