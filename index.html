@@ -29,7 +29,15 @@
       box-shadow: 0 0 30px rgba(0,0,0,0.8); 
     }
     
-    video {position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; transition: filter 0.3s ease;}
+    /* Обидва відео-шари тепер повноцінні й кросфейдяться між собою */
+    #bgVideo, #nextVideoCache {
+      position:absolute; top:0; left:0; width:100%; height:100%;
+      object-fit:cover;
+      transition: filter 0.3s ease, opacity 0.4s ease;
+    }
+    #bgVideo { z-index: 2; opacity: 1; }
+    #nextVideoCache { z-index: 1; opacity: 0; pointer-events: none; }
+
     video.paused-dark {filter: brightness(0.7) contrast(0.95);}
     video.playing-dark {filter: brightness(0.3) contrast(0.95);}
 
@@ -76,6 +84,9 @@
     .hand {position: absolute; width:35%; max-width: 180px; opacity:0; transform-origin: center center;}
     
     #handPlayer {bottom: 1%; right: 5%; transform: scale(1) rotate(-20deg);}
+    #handPlayer.paper-size {
+      transform: scale(0.85) rotate(-20deg) !important;
+    }
     #handOpponent {top: 1%; left: 5%; transform: scale(1) rotate(160deg);}
     
     .hand.shakePlayer {
@@ -102,7 +113,6 @@
     #result {
       position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.1);
       width: 40%; max-width: 280px; opacity: 0; z-index: 6;
-      /*filter: drop-shadow(0 0 20px rgba(0,255,34,0.6));*/
       pointer-events: none;
       transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
@@ -157,9 +167,9 @@
     <img src="assets/hand_pointer.webp" id="handPointer" alt="Pointer">
   </div>
 
-  <video id="bgVideo" muted playsinline style="display:none;"></video>
-  
-  <video id="nextVideoCache" muted playsinline preload="auto" style="display:none; width:1px; height:1px; opacity:0.01; pointer-events:none;"></video>
+  <!-- Два повноцінних відео-шари для кросфейду -->
+  <video id="bgVideo" muted playsinline></video>
+  <video id="nextVideoCache" muted playsinline preload="auto"></video>
 
   <div id="overlay">
     <div class="hands">
@@ -193,8 +203,10 @@
 <audio id="startSound" src="assets/start_sound.mp3" playsinline></audio>
 
 <script>
-const bgVideo = document.getElementById("bgVideo");
-const nextVideoCache = document.getElementById("nextVideoCache"); 
+// Активний та резервний відео-шари. Свопаються після кожного кросфейду.
+let activeVideo = document.getElementById("bgVideo");
+let standbyVideo = document.getElementById("nextVideoCache");
+
 const bgMusic = document.getElementById("bgMusic");
 const winSound = document.getElementById("winSound");
 const bubbleSound = document.getElementById("bubbleSound");
@@ -221,16 +233,12 @@ let particleAnimationId;
 let glowInterval;
 let currentGlowIndex = 0;
 
+const CROSSFADE_MS = 400; 
+
 window.addEventListener("DOMContentLoaded", () => {
   const splashVideo = document.getElementById("splashVideo");
   splashVideo.playbackRate = 0.5; 
   splashVideo.play().catch(e => console.log("Сплеш відео чекає взаємодії"));
-});
-
-bgVideo.addEventListener("ended", () => {
-  if (round < 2) {
-    bgVideo.className = "paused-dark"; 
-  }
 });
 
 function preparePlaylist() {
@@ -248,7 +256,7 @@ function preparePlaylist() {
 function startGame() {
   preparePlaylist();
   document.getElementById("splash").style.display = "none";
-  bgVideo.style.display = "block";
+  activeVideo.style.display = "block";
   if (!isMuted) {
     bgMusic.play().catch(e => console.log("Аудіо заблоковано"));
     
@@ -259,9 +267,9 @@ function startGame() {
   }
   
   bgMusic.volume = 0.05;
-  bgVideo.src = gamePlaylist[0];
-  bgVideo.loop = true;
-  bgVideo.play();
+  activeVideo.src = gamePlaylist[0];
+  activeVideo.loop = true;
+  activeVideo.play();
   preloadNextVideo(1); 
   
   setTimeout(() => { showOverlay(); }, 500);
@@ -269,25 +277,54 @@ function startGame() {
 
 function preloadNextVideo(nextRoundIndex) {
   if (nextRoundIndex < gamePlaylist.length) {
-    nextVideoCache.src = gamePlaylist[nextRoundIndex];
-    nextVideoCache.load();
+    standbyVideo.src = gamePlaylist[nextRoundIndex];
+    standbyVideo.load();
   }
 }
 
-function loadRound() {
-  bgVideo.src = gamePlaylist[round];
-  bgVideo.loop = true; 
-  bgVideo.className = ""; 
-  bgMusic.volume = 0.05;
-  bgVideo.play();
-  
-  preloadNextVideo(round + 1);
+function crossfadeToStandby() {
+  return new Promise(resolve => {
+    if (!standbyVideo.src) { resolve(); return; }
 
-  if (round < 2) {
-    setTimeout(() => {
-      showOverlay();
-    }, 500);
-  }
+    standbyVideo.className = "";
+    standbyVideo.currentTime = 0;
+    standbyVideo.loop = true;
+
+    const doSwap = () => {
+      standbyVideo.style.zIndex = 2;
+      activeVideo.style.zIndex = 1;
+      standbyVideo.style.opacity = 1;
+      activeVideo.style.opacity = 0;
+
+      setTimeout(() => {
+        activeVideo.pause();
+        const tmp = activeVideo;
+        activeVideo = standbyVideo;
+        standbyVideo = tmp;
+        resolve();
+      }, CROSSFADE_MS);
+    };
+
+    const playPromise = standbyVideo.play();
+    if (playPromise !== undefined) {
+      playPromise.then(doSwap).catch(() => doSwap());
+    } else {
+      doSwap();
+    }
+  });
+}
+
+function loadRound() {
+  crossfadeToStandby().then(() => {
+    activeVideo.className = "";
+    preloadNextVideo(round + 1);
+
+    if (round < 2) {
+      setTimeout(() => {
+        showOverlay();
+      }, 300);
+    }
+  });
 }
 
 function showOverlay() {
@@ -343,8 +380,8 @@ function play(choice) {
     img.className = (img === selected) ? "selected" : "disabled";
   });
 
-  bgVideo.pause();
-  bgVideo.className = "playing-dark";
+  activeVideo.pause();
+  activeVideo.className = "playing-dark";
 
   let opponent = "";
   if (choice === "paper") {
@@ -367,7 +404,9 @@ function play(choice) {
   setTimeout(() => {
     player.className = "hand fadeIn";
     opp.className = "hand fadeIn";
-    
+    if (choice === "paper") {
+      player.classList.add("paper-size");
+    }
     player.src = playerGestures[choice];
     opp.src = opponentGestures[opponent];
 
@@ -386,9 +425,9 @@ function play(choice) {
     overlay.classList.remove("active");
     overlay.style.display = "none";
     
-    bgVideo.className = "";
-    bgVideo.loop = true;
-    bgVideo.play();
+    activeVideo.className = "";
+    activeVideo.loop = true;
+    activeVideo.play();
     
     let targetYFactor = 0.5; 
     if (round === 1) {
@@ -414,23 +453,27 @@ function play(choice) {
 }
 
 function showFinalScene() {
-  bgVideo.style.display = "none";
-  
-  const finalScene = document.getElementById("finalScene");
-  finalScene.style.display = "flex";
-  
-  const finalVideo = document.getElementById("finalVideo");
-  finalVideo.src = gamePlaylist[2]; 
-  finalVideo.play();
+  crossfadeToStandby().then(() => {
+    const finalScene = document.getElementById("finalScene");
+    const finalVideo = document.getElementById("finalVideo");
 
-  setTimeout(() => {
-    document.getElementById("bubble").classList.add("show");
-    document.getElementById("ctaBtn").classList.add("show");
-    if (!isMuted && bubbleSound) {
-      bubbleSound.currentTime = 0;
-      bubbleSound.play().catch(e => console.log("Звук бабла заблоковано"));
-    }
-  }, 600);
+    finalVideo.src = gamePlaylist[2];
+    finalScene.style.display = "flex";
+    finalVideo.currentTime = activeVideo.currentTime || 0;
+    finalVideo.play();
+
+    activeVideo.style.display = "none";
+    standbyVideo.style.display = "none";
+
+    setTimeout(() => {
+      document.getElementById("bubble").classList.add("show");
+      document.getElementById("ctaBtn").classList.add("show");
+      if (!isMuted && bubbleSound) {
+        bubbleSound.currentTime = 0;
+        bubbleSound.play().catch(e => console.log("Звук бабла заблоковано"));
+      }
+    }, 600);
+  });
 }
 
 function triggerHeartParticles(yFactor) {
