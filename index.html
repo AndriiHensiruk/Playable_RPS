@@ -199,16 +199,17 @@
 
 <audio id="bgMusic" src="assets/music.mp3" loop playsinline></audio>
 <audio id="winSound" src="assets/win.mp3" playsinline></audio>
+<audio id="winSound2" src="assets/win2.mp3" playsinline></audio>
 <audio id="bubbleSound" src="assets/bubble.mp3" playsinline></audio>
 <audio id="startSound" src="assets/start_sound.mp3" playsinline></audio>
 
 <script>
-// Активний та резервний відео-шари. Свопаються після кожного кросфейду.
 let activeVideo = document.getElementById("bgVideo");
 let standbyVideo = document.getElementById("nextVideoCache");
 
 const bgMusic = document.getElementById("bgMusic");
 const winSound = document.getElementById("winSound");
+const winSound2 = document.getElementById("winSound2");
 const bubbleSound = document.getElementById("bubbleSound");
 const startSound = document.getElementById("startSound");
 
@@ -413,8 +414,14 @@ function play(choice) {
     setTimeout(() => {
       document.getElementById("result").classList.add("show");
       if (!isMuted) {
-        winSound.currentTime = 0;
-        winSound.play();
+        if (round === 0) {
+          winSound.currentTime = 0;
+          winSound.play();
+        } else {
+          winSound2.currentTime = 0;
+          winSound2.play(); 
+          winSound2.volume = 1;
+        }
       }
     }, 600); 
 
@@ -544,6 +551,7 @@ function toggleSound() {
   isMuted = !isMuted;
   bgMusic.muted = isMuted;
   winSound.muted = isMuted;
+  winSound2.muted = isMuted;
   if (bubbleSound) bubbleSound.muted = isMuted;
   if (startSound) startSound.muted = isMuted;
   document.getElementById("muteBtn").textContent = isMuted ? "🔇" : "🔊";
